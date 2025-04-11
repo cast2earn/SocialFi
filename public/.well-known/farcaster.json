@@ -1,1 +1,18 @@
-{}
+{
+    "accountAssociation": {
+      "header": "eyJmaWQiOjg3OTQ5MSwidHlwZSI6ImN1c3RvZHkiLCJrZXkiOiIweDFlYmUxNDIyNjQxMTg0QUEyRDhhZDZkOGYxMDc4QmVDOWUwMzAyQ0YifQ",
+      "payload": "eyJkb21haW4iOiJzb2NpYWwtZmktYWxwaGEudmVyY2VsLmFwcCJ9",
+      "signature": "MHhiMjdhMzdiMzI4YTUyYzBkZTBkNzM4MGQwYWFmYzczZGY3YmZiNTU3OWMwZWU3ZGJhMWZlOWQ4NGExOTNkOGNkNDZhOWI5NDYxZThmOTFjYTg3NjNmMGVkMGE4ZDQxYzRkZDRjZDJhOThlOGNjNjE0ZDZiYmQ3OGE5NDJiM2IyZTFi"
+    },
+    "frame": {
+      "version": "1",
+      "name": "SocialFi",
+      "iconUrl": "https://social-fi-alpha.vercel.app/icon.png",
+      "homeUrl": "https://social-fi-alpha.vercel.app",
+      "imageUrl": "https://social-fi-alpha.vercel.app/image.png",
+      "buttonTitle": "Claim point daily",
+      "splashImageUrl": "https://social-fi-alpha.vercel.app/splash.png",
+      "splashBackgroundColor": "#eeccff",
+      "webhookUrl": "https://social-fi-alpha.vercel.app/api/webhook"
+    }
+  }

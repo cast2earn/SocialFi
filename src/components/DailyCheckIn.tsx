@@ -43,15 +43,45 @@ const CheckInButton = styled.button`
   }
 `;
 
+const ConnectButton = styled(CheckInButton)`
+  background-color: #2196F3;
+  margin-bottom: 20px;
+
+  &:hover {
+    background-color: #1976D2;
+  }
+`;
+
 const PointsDisplay = styled.div`
   margin-top: 20px;
   font-size: 18px;
   color: #333;
 `;
 
+const UserProfile = styled.div`
+  margin-bottom: 30px;
+  text-align: center;
+  font-size: 14px;
+  color: #333;
+`;
+
+const UserAvatar = styled.img`
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+`;
+
 const DailyCheckIn = () => {
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [points, setPoints] = useState(0);
+  const [isConnected, setIsConnected] = useState(false);
+  const [userData, setUserData] = useState<{
+    fid?: string;
+    username?: string;
+    displayName?: string;
+    avatar?: string;
+  }>({});
 
   useEffect(() => {
     // Load saved data from localStorage
@@ -70,7 +100,31 @@ const DailyCheckIn = () => {
     sdk.actions.ready();
   }, []);
 
+  const handleConnect = async () => {
+    try {
+      // For testing purposes, we'll simulate a successful connection
+      // In a real app, you would use the actual SDK methods
+      setIsConnected(true);
+      setUserData({
+        fid: '12345',
+        username: 'user123',
+        displayName: 'User Name',
+        avatar: 'https://placekitten.com/200/200'
+      });
+      
+      // In a real implementation, you would use:
+      // await sdk.actions.signIn({...});
+    } catch (error) {
+      console.error('Authentication error:', error);
+    }
+  };
+
   const handleCheckIn = () => {
+    if (!isConnected) {
+      alert('Please connect your wallet first!');
+      return;
+    }
+
     const today = new Date().toDateString();
     
     // Add 100 points
@@ -86,9 +140,27 @@ const DailyCheckIn = () => {
   return (
     <Container>
       <Title>Daily Check-In</Title>
+      
+      {!isConnected ? (
+        <ConnectButton onClick={handleConnect}>
+          Connect Wallet
+        </ConnectButton>
+      ) : (
+        <UserProfile>
+          {userData.avatar && (
+            <UserAvatar src={userData.avatar} alt="User avatar" />
+          )}
+          <div>FID: {userData.fid}</div>
+          <div>Username: {userData.username}</div>
+          {userData.displayName && (
+            <div>Display Name: {userData.displayName}</div>
+          )}
+        </UserProfile>
+      )}
+
       <CheckInButton 
         onClick={handleCheckIn} 
-        disabled={hasCheckedIn}
+        disabled={hasCheckedIn || !isConnected}
       >
         {hasCheckedIn ? 'Already Checked In Today' : 'Check In Now'}
       </CheckInButton>

@@ -100,53 +100,56 @@ const Title = styled.h1`
   }
 `;
 
-const FidDisplay = styled.div`
-  font-size: 12px;
-  color: #4CAF50;
-  margin: 15px 0;
-  text-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
-  animation: ${fadeIn} 0.5s ease-out;
-  padding: 8px;
-  background-color: rgba(76, 175, 80, 0.1);
-  border-radius: 4px;
-  display: inline-block;
-`;
-
 const UserProfile = styled.div`
   margin: 20px 0;
   padding: 15px;
-  border-radius: 8px;
-  background-color: #f0f8ff;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
+  animation: ${fadeIn} 0.5s ease-out;
+  border: 2px solid rgba(76, 175, 80, 0.3);
+  backdrop-filter: blur(5px);
 `;
 
 const UserAvatar = styled.img`
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  border-radius: 4px;
   margin-bottom: 10px;
   object-fit: cover;
+  border: 2px solid #4CAF50;
+  image-rendering: pixelated;
 `;
 
 const UserInfo = styled.div`
   margin-top: 10px;
-  font-size: 14px;
+  font-size: 10px;
+  color: white;
+  text-align: center;
+  font-family: 'Press Start 2P', cursive;
+  
+  div {
+    margin: 8px 0;
+    padding: 4px 8px;
+    background-color: rgba(76, 175, 80, 0.1);
+    border-radius: 4px;
+    display: inline-block;
+  }
 `;
 
 const DailyCheckIn = () => {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [checkInTime, setCheckInTime] = useState<string | null>(null);
-  const { isConnected, address } = useAccount();
+  const { isConnected } = useAccount();
   const { connect, connectors } = useConnect();
+  const [userFid, setUserFid] = useState<string | null>(null);
   const [userData, setUserData] = useState<{
-    fid?: string;
     username?: string;
     displayName?: string;
     avatar?: string;
   }>({});
-  const [userFid, setUserFid] = useState<string | null>(null);
 
   useEffect(() => {
     const initializeFrame = async () => {
@@ -157,9 +160,18 @@ const DailyCheckIn = () => {
         // Get FID from URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const fid = urlParams.get('fid');
+        const username = urlParams.get('username');
+        const displayName = urlParams.get('displayName');
+        const pfp = urlParams.get('pfp');
+        
         if (fid) {
           setUserFid(fid);
-          console.log('User FID:', fid);
+          setUserData({
+            username: username || undefined,
+            displayName: displayName || undefined,
+            avatar: pfp || undefined
+          });
+          console.log('User data:', { fid, username, displayName, pfp });
         }
       } catch (error) {
         console.error('Error initializing frame:', error);
@@ -179,42 +191,6 @@ const DailyCheckIn = () => {
       }
     }
   }, []);
-
-  useEffect(() => {
-    if (isConnected && address) {
-      // Get user data from Farcaster API
-      const getUserData = async () => {
-        try {
-          // Get the connected account
-          const provider = sdk.wallet.ethProvider;
-          if (provider) {
-            const accounts = await provider.request({ method: 'eth_accounts' });
-            if (accounts && accounts[0]) {
-              // Get user data from Farcaster API
-              const response = await fetch(`https://api.farcaster.xyz/v2/user-by-address/${accounts[0]}`);
-              if (response.ok) {
-                const data = await response.json();
-                if (data.result && data.result.user) {
-                  const user = data.result.user;
-                  setUserData({
-                    fid: user.fid.toString(),
-                    username: user.username,
-                    displayName: user.display_name,
-                    avatar: user.pfp_url
-                  });
-                }
-              } else {
-                console.error('Failed to fetch user data:', await response.text());
-              }
-            }
-          }
-        } catch (error) {
-          console.error('Error fetching user data:', error);
-        }
-      };
-      getUserData();
-    }
-  }, [isConnected, address]);
 
   const handleCheckIn = async () => {
     if (!isConnected) {
@@ -237,11 +213,24 @@ const DailyCheckIn = () => {
   return (
     <Container>
       <Title>Daily Check-In</Title>
+      {userFid && userData && (
+        <UserProfile>
+          {userData.avatar && (
+            <UserAvatar src={userData.avatar} alt="User avatar" />
+          )}
+          <UserInfo>
+            <div>FID: {userFid}</div>
+            {userData.username && (
+              <div>@{userData.username}</div>
+            )}
+            {userData.displayName && (
+              <div>{userData.displayName}</div>
+            )}
+          </UserInfo>
+        </UserProfile>
+      )}
       <Status>
         <p>{isConnected ? 'Connected to wallet' : 'Not connected to wallet'}</p>
-        {userFid && (
-          <FidDisplay>FID: {userFid}</FidDisplay>
-        )}
       </Status>
       <Button 
         onClick={handleCheckIn} 
@@ -254,21 +243,6 @@ const DailyCheckIn = () => {
           <p>Last check-in: {new Date(checkInTime).toLocaleString()}</p>
         </Status>
       )}
-      {isConnected && userData.fid ? (
-        <UserProfile>
-          {userData.avatar && (
-            <UserAvatar src={userData.avatar} alt="User avatar" />
-          )}
-          <UserInfo>
-            <div>FID: {userData.fid}</div>
-            <div>Username: {userData.username}</div>
-            {userData.displayName && (
-              <div>Display Name: {userData.displayName}</div>
-            )}
-            <div>Address: {address}</div>
-          </UserInfo>
-        </UserProfile>
-      ) : null}
     </Container>
   );
 };

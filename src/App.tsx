@@ -1,8 +1,10 @@
 import SimpleCheckIn from './components/SimpleCheckIn'
 
-function App() {
+const App = () => {
   return (
-    <SimpleCheckIn />
+    <div style={{ width: '100%', minHeight: '100vh', background: '#87CEEB' }}>
+      <SimpleCheckIn />
+    </div>
   )
 }
 

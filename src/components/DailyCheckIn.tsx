@@ -5,189 +5,109 @@ import styled, { keyframes } from 'styled-components';
 import { supabase } from '../config/supabase';
 
 const fadeIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
-
-const pulse = keyframes`
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
-`;
-
-const pointsIncrease = keyframes`
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.2);
-    color: #00ff00;
-  }
-  100% {
-    transform: scale(1);
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 `;
 
 const Container = styled.div`
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-  text-align: center;
-  background-color: #e3f2fd;
-  color: #1a1b1f;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   min-height: 100vh;
-  animation: ${fadeIn} 0.5s ease-out;
-  line-height: 1.6;
-`;
-
-const Button = styled.button`
-  background-color: #2196f3;
-  color: white;
-  padding: 12px 24px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  margin: 20px 0;
-  transition: all 0.3s ease;
-  font-family: 'Press Start 2P', cursive;
-  animation: ${pulse} 2s infinite;
-  text-transform: uppercase;
-  box-shadow: 0 4px 0 #1976d2;
-
-  &:hover {
-    background-color: #1976d2;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 #1565c0;
-  }
-
-  &:active {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #1565c0;
-  }
-
-  &:disabled {
-    background-color: #bbdefb;
-    cursor: not-allowed;
-    transform: none;
-    animation: none;
-    box-shadow: none;
-  }
-`;
-
-const Status = styled.div`
-  margin: 20px 0;
-  padding: 15px;
-  border-radius: 4px;
-  background-color: rgba(33, 150, 243, 0.1);
-  color: #1a1b1f;
-  font-size: 10px;
-  animation: ${fadeIn} 0.5s ease-out;
-  backdrop-filter: blur(5px);
-  border: 2px solid rgba(33, 150, 243, 0.3);
-  line-height: 1.8;
+  padding: 20px;
+  background: #000000;
+  color: #ffffff;
+  animation: ${fadeIn} 0.5s ease-in;
 `;
 
 const Title = styled.h1`
   font-size: 24px;
-  margin-bottom: 30px;
-  color: #1a1b1f;
-  text-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
-  animation: ${fadeIn} 0.5s ease-out;
-  letter-spacing: 2px;
-  line-height: 1.4;
-  
-  @media (max-width: 768px) {
-    font-size: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+`;
+
+const Button = styled.button`
+  background: #3498db;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 10px 0;
+  width: 100%;
+  max-width: 300px;
+
+  &:hover {
+    background: #2980b9;
   }
+
+  &:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+  }
+`;
+
+const Status = styled.div`
+  margin: 10px 0;
+  text-align: center;
+  font-size: 14px;
+  color: #95a5a6;
 `;
 
 const UserProfile = styled.div`
-  margin: 20px 0;
-  padding: 15px;
-  border-radius: 4px;
-  background-color: rgba(33, 150, 243, 0.1);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  animation: ${fadeIn} 0.5s ease-out;
-  border: 2px solid rgba(33, 150, 243, 0.3);
-  backdrop-filter: blur(5px);
+  gap: 10px;
+  margin: 20px 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  width: 100%;
+  max-width: 300px;
 `;
 
 const UserAvatar = styled.img`
-  width: 64px;
-  height: 64px;
-  border-radius: 4px;
-  margin-bottom: 10px;
-  object-fit: cover;
-  border: 2px solid #2196f3;
-  image-rendering: pixelated;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
 `;
 
 const UserInfo = styled.div`
-  margin-top: 10px;
-  font-size: 10px;
-  color: #1a1b1f;
-  text-align: center;
-  font-family: 'Press Start 2P', cursive;
-  
-  div {
-    margin: 8px 0;
-    padding: 4px 8px;
-    background-color: rgba(33, 150, 243, 0.1);
-    border-radius: 4px;
-    display: inline-block;
-  }
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
 `;
 
-interface PointsDisplayProps {
-  $isIncreasing: boolean;
-}
-
-const PointsDisplay = styled.div<PointsDisplayProps>`
-  font-size: 14px;
-  color: #1a1b1f;
-  margin: 15px auto;
-  padding: 15px;
-  background-color: rgba(33, 150, 243, 0.1);
-  border-radius: 4px;
-  border: 2px solid rgba(33, 150, 243, 0.3);
-  animation: ${fadeIn} 0.5s ease-out;
-  font-family: 'Press Start 2P', cursive;
-  max-width: 200px;
-  text-align: center;
+const PointsDisplay = styled.div<{ $isIncreasing: boolean }>`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 20px 0;
+  position: relative;
 
   .points-label {
-    font-size: 12px;
-    margin-bottom: 8px;
+    font-size: 14px;
+    color: #95a5a6;
   }
 
   .points-value {
-    font-size: 24px;
-    color: #2196f3;
-    margin-top: 5px;
-    animation: ${({ $isIncreasing }) => $isIncreasing ? pointsIncrease : 'none'} 0.5s ease-out;
+    font-size: 32px;
+    font-weight: bold;
+    color: ${props => props.$isIncreasing ? '#2ecc71' : '#ffffff'};
+    transition: color 0.3s ease;
   }
 
   .points-increase {
-    color: #00ff00;
-    font-size: 12px;
-    margin-top: 5px;
-    opacity: ${({ $isIncreasing }) => $isIncreasing ? 1 : 0};
-    transition: opacity 0.3s ease;
+    position: absolute;
+    top: -20px;
+    right: 0;
+    color: #2ecc71;
+    font-weight: bold;
+    animation: ${fadeIn} 0.3s ease-in;
   }
 `;
 
@@ -205,6 +125,7 @@ const DailyCheckIn = () => {
   const [points, setPoints] = useState<number>(0);
   const [isPointsIncreasing, setIsPointsIncreasing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fungsi untuk mengambil data point dari database
   const fetchUserPoints = async (fid: string) => {
@@ -232,6 +153,7 @@ const DailyCheckIn = () => {
       }
     } catch (error) {
       console.error('Error fetching user points:', error);
+      setError('Failed to fetch user points');
     }
   };
 
@@ -251,6 +173,7 @@ const DailyCheckIn = () => {
       if (error) throw error;
     } catch (error) {
       console.error('Error saving user profile:', error);
+      setError('Failed to save user profile');
     }
   };
 
@@ -269,6 +192,7 @@ const DailyCheckIn = () => {
       if (error) throw error;
     } catch (error) {
       console.error('Error updating user points:', error);
+      setError('Failed to update points');
     }
   };
 
@@ -276,7 +200,11 @@ const DailyCheckIn = () => {
     const initializeFrame = async () => {
       try {
         setIsLoading(true);
+        setError(null);
+        
+        // Initialize Farcaster Frame SDK
         await sdk.actions.ready();
+        console.log('Frame SDK initialized');
         
         const provider = sdk.wallet.ethProvider;
         if (provider) {
@@ -287,6 +215,8 @@ const DailyCheckIn = () => {
             const username = urlParams.get('username');
             const displayName = urlParams.get('displayName');
             const pfp = urlParams.get('pfp');
+            
+            console.log('URL Parameters:', { fid, username, displayName, pfp });
             
             if (fid) {
               setUserFid(fid);
@@ -312,6 +242,7 @@ const DailyCheckIn = () => {
         }
       } catch (error) {
         console.error('Error initializing frame:', error);
+        setError('Failed to initialize frame');
       } finally {
         setIsLoading(false);
       }
@@ -328,10 +259,12 @@ const DailyCheckIn = () => {
 
     if (!userFid) {
       console.error('No user FID found');
+      setError('No user FID found');
       return;
     }
 
     try {
+      setError(null);
       const now = new Date().toISOString();
       setIsCheckedIn(true);
       setCheckInTime(now);
@@ -351,6 +284,7 @@ const DailyCheckIn = () => {
       
     } catch (error) {
       console.error('Check-in failed:', error);
+      setError('Check-in failed');
     }
   };
 
@@ -358,6 +292,20 @@ const DailyCheckIn = () => {
     return (
       <Container>
         <Title>Loading...</Title>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container>
+        <Title>Error</Title>
+        <Status>
+          <p>{error}</p>
+        </Status>
+        <Button onClick={() => window.location.reload()}>
+          Retry
+        </Button>
       </Container>
     );
   }

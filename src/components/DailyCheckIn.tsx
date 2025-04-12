@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAccount, useConnect } from 'wagmi';
+import { sdk } from '@farcaster/frame-sdk';
 import styled from 'styled-components';
 
 const Container = styled.div`
@@ -43,6 +44,9 @@ const DailyCheckIn = () => {
   const { connect, connectors } = useConnect();
 
   useEffect(() => {
+    // Call ready when component is mounted
+    sdk.actions.ready();
+
     // Check if user has already checked in today
     const lastCheckIn = localStorage.getItem('lastCheckIn');
     if (lastCheckIn) {

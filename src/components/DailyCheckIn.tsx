@@ -157,21 +157,28 @@ const DailyCheckIn = () => {
         // Initialize Frame
         await sdk.actions.ready();
         
-        // Get FID from URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const fid = urlParams.get('fid');
-        const username = urlParams.get('username');
-        const displayName = urlParams.get('displayName');
-        const pfp = urlParams.get('pfp');
-        
-        if (fid) {
-          setUserFid(fid);
-          setUserData({
-            username: username || undefined,
-            displayName: displayName || undefined,
-            avatar: pfp || undefined
-          });
-          console.log('User data:', { fid, username, displayName, pfp });
+        // Get user data from frame context
+        const provider = sdk.wallet.ethProvider;
+        if (provider) {
+          const accounts = await provider.request({ method: 'eth_accounts' });
+          if (accounts && accounts[0]) {
+            // Get frame data from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const fid = urlParams.get('fid');
+            const username = urlParams.get('username');
+            const displayName = urlParams.get('displayName');
+            const pfp = urlParams.get('pfp');
+            
+            if (fid) {
+              setUserFid(fid);
+              setUserData({
+                username: username || undefined,
+                displayName: displayName || undefined,
+                avatar: pfp || undefined
+              });
+              console.log('Frame data:', { fid, username, displayName, pfp });
+            }
+          }
         }
       } catch (error) {
         console.error('Error initializing frame:', error);
@@ -204,7 +211,12 @@ const DailyCheckIn = () => {
       setIsCheckedIn(true);
       setCheckInTime(now);
       
-      console.log('Check-in successful');
+      // Log the check-in with user data
+      console.log('Check-in successful', {
+        fid: userFid,
+        username: userData.username,
+        timestamp: now
+      });
     } catch (error) {
       console.error('Check-in failed:', error);
     }
@@ -230,7 +242,14 @@ const DailyCheckIn = () => {
         </UserProfile>
       )}
       <Status>
-        <p>{isConnected ? 'Connected to wallet' : 'Not connected to wallet'}</p>
+        <p>
+          {userFid 
+            ? 'Connected with Farcaster'
+            : isConnected 
+              ? 'Connected to wallet' 
+              : 'Not connected to wallet'
+          }
+        </p>
       </Status>
       <Button 
         onClick={handleCheckIn} 

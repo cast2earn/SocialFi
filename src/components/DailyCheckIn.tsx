@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAccount, useConnect } from 'wagmi';
 import { sdk } from '@farcaster/frame-sdk';
 import styled, { keyframes } from 'styled-components';
+import { supabase } from '../config/supabase';
 
 const fadeIn = keyframes`
   from {
@@ -203,10 +204,78 @@ const DailyCheckIn = () => {
   }>({});
   const [points, setPoints] = useState<number>(0);
   const [isPointsIncreasing, setIsPointsIncreasing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Fungsi untuk mengambil data point dari database
+  const fetchUserPoints = async (fid: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_points')
+        .select('points, last_check_in')
+        .eq('fid', fid)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        setPoints(data.points);
+        if (data.last_check_in) {
+          const lastCheckInDate = new Date(data.last_check_in);
+          const today = new Date();
+          if (lastCheckInDate.toDateString() === today.toDateString()) {
+            setIsCheckedIn(true);
+            setCheckInTime(data.last_check_in);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user points:', error);
+    }
+  };
+
+  // Fungsi untuk menyimpan atau mengupdate profil pengguna
+  const saveUserProfile = async (fid: string, profile: { username: string, display_name?: string, avatar_url?: string }) => {
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .upsert({
+          fid,
+          username: profile.username,
+          display_name: profile.display_name,
+          avatar_url: profile.avatar_url,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error saving user profile:', error);
+    }
+  };
+
+  // Fungsi untuk mengupdate point pengguna
+  const updateUserPoints = async (fid: string, newPoints: number, checkInTime: string) => {
+    try {
+      const { error } = await supabase
+        .from('user_points')
+        .upsert({
+          fid,
+          points: newPoints,
+          last_check_in: checkInTime,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating user points:', error);
+    }
+  };
 
   useEffect(() => {
     const initializeFrame = async () => {
       try {
+        setIsLoading(true);
         await sdk.actions.ready();
         
         const provider = sdk.wallet.ethProvider;
@@ -226,33 +295,29 @@ const DailyCheckIn = () => {
                 displayName: displayName || undefined,
                 avatar: pfp || undefined
               });
-              
-              // Load saved points from localStorage
-              const savedPoints = localStorage.getItem(`points_${fid}`);
-              if (savedPoints) {
-                setPoints(parseInt(savedPoints));
+
+              // Fetch user points from database
+              await fetchUserPoints(fid);
+
+              // Save/update user profile
+              if (username) {
+                await saveUserProfile(fid, {
+                  username,
+                  display_name: displayName || undefined,
+                  avatar_url: pfp || undefined
+                });
               }
-              
-              console.log('Frame data:', { fid, username, displayName, pfp });
             }
           }
         }
       } catch (error) {
         console.error('Error initializing frame:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     initializeFrame();
-
-    const lastCheckIn = localStorage.getItem('lastCheckIn');
-    if (lastCheckIn) {
-      const lastCheckInDate = new Date(lastCheckIn);
-      const today = new Date();
-      if (lastCheckInDate.toDateString() === today.toDateString()) {
-        setIsCheckedIn(true);
-        setCheckInTime(lastCheckIn);
-      }
-    }
   }, []);
 
   const handleCheckIn = async () => {
@@ -261,9 +326,13 @@ const DailyCheckIn = () => {
       return;
     }
 
+    if (!userFid) {
+      console.error('No user FID found');
+      return;
+    }
+
     try {
       const now = new Date().toISOString();
-      localStorage.setItem('lastCheckIn', now);
       setIsCheckedIn(true);
       setCheckInTime(now);
       
@@ -272,26 +341,26 @@ const DailyCheckIn = () => {
       const newPoints = points + 10;
       setPoints(newPoints);
       
-      // Save points to localStorage
-      if (userFid) {
-        localStorage.setItem(`points_${userFid}`, newPoints.toString());
-      }
+      // Update points in database
+      await updateUserPoints(userFid, newPoints, now);
       
       // Reset animation after 500ms
       setTimeout(() => {
         setIsPointsIncreasing(false);
       }, 500);
       
-      console.log('Check-in successful', {
-        fid: userFid,
-        username: userData.username,
-        timestamp: now,
-        points: newPoints
-      });
     } catch (error) {
       console.error('Check-in failed:', error);
     }
   };
+
+  if (isLoading) {
+    return (
+      <Container>
+        <Title>Loading...</Title>
+      </Container>
+    );
+  }
 
   return (
     <Container>

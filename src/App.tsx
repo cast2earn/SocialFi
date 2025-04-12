@@ -1,8 +1,8 @@
-import DailyCheckIn from './components/DailyCheckIn'
+import SimpleCheckIn from './components/SimpleCheckIn'
 
 function App() {
   return (
-    <DailyCheckIn />
+    <SimpleCheckIn />
   )
 }
 

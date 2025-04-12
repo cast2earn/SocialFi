@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { sdk } from '@farcaster/frame-sdk';
 import styled from 'styled-components';
+import { useAccount, useConnect } from 'wagmi';
 
 const Container = styled.div`
   background-color: #e6f3ff;
@@ -75,7 +76,8 @@ const UserAvatar = styled.img`
 const DailyCheckIn = () => {
   const [hasCheckedIn, setHasCheckedIn] = useState(false);
   const [points, setPoints] = useState(0);
-  const [isConnected, setIsConnected] = useState(false);
+  const { isConnected, address } = useAccount();
+  const { connect, connectors } = useConnect();
   const [userData, setUserData] = useState<{
     fid?: string;
     username?: string;
@@ -100,22 +102,38 @@ const DailyCheckIn = () => {
     sdk.actions.ready();
   }, []);
 
-  const handleConnect = async () => {
-    try {
-      // For testing purposes, we'll simulate a successful connection
-      // In a real app, you would use the actual SDK methods
-      setIsConnected(true);
-      setUserData({
-        fid: '12345',
-        username: 'user123',
-        displayName: 'User Name',
-        avatar: 'https://placekitten.com/200/200'
-      });
-      
-      // In a real implementation, you would use:
-      // await sdk.actions.signIn({...});
-    } catch (error) {
-      console.error('Authentication error:', error);
+  useEffect(() => {
+    if (isConnected && address) {
+      // Get user data from Warpcast
+      const getUserData = async () => {
+        try {
+          // Use the wallet's ethProvider to get user data
+          const provider = sdk.wallet.ethProvider;
+          if (provider) {
+            // Get the connected account
+            const accounts = await provider.request({ method: 'eth_accounts' });
+            if (accounts && accounts[0]) {
+              // For now, we'll use mock data since the actual user data might not be available
+              // In a real implementation, you would use the Farcaster API to get user data
+              setUserData({
+                fid: '12345', // This should come from the Farcaster API
+                username: 'user123',
+                displayName: 'User Name',
+                avatar: 'https://placekitten.com/200/200'
+              });
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      };
+      getUserData();
+    }
+  }, [isConnected, address]);
+
+  const handleConnect = () => {
+    if (connectors[0]) {
+      connect({ connector: connectors[0] });
     }
   };
 
@@ -155,6 +173,7 @@ const DailyCheckIn = () => {
           {userData.displayName && (
             <div>Display Name: {userData.displayName}</div>
           )}
+          <div>Address: {address}</div>
         </UserProfile>
       )}
 

@@ -1,0 +1,5 @@
+[33mcommit da6160dfaee50e4d4d654f6ad75d3a44f0ef6e2d[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: danyjr3264 <danyjr326@gmail.com>
+Date:   Sat Apr 12 07:04:19 2025 +0700
+
+    fix: resolve wagmi configuration type issues

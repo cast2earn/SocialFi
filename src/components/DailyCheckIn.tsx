@@ -37,11 +37,40 @@ const Status = styled.div`
   background-color: #f8f9fa;
 `;
 
+const UserProfile = styled.div`
+  margin: 20px 0;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f0f8ff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const UserAvatar = styled.img`
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+  object-fit: cover;
+`;
+
+const UserInfo = styled.div`
+  margin-top: 10px;
+  font-size: 14px;
+`;
+
 const DailyCheckIn = () => {
   const [isCheckedIn, setIsCheckedIn] = useState(false);
   const [checkInTime, setCheckInTime] = useState<string | null>(null);
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { connect, connectors } = useConnect();
+  const [userData, setUserData] = useState<{
+    fid?: string;
+    username?: string;
+    displayName?: string;
+    avatar?: string;
+  }>({});
 
   useEffect(() => {
     // Call ready when component is mounted
@@ -58,6 +87,42 @@ const DailyCheckIn = () => {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (isConnected && address) {
+      // Get user data from Farcaster API
+      const getUserData = async () => {
+        try {
+          // Get the connected account
+          const provider = sdk.wallet.ethProvider;
+          if (provider) {
+            const accounts = await provider.request({ method: 'eth_accounts' });
+            if (accounts && accounts[0]) {
+              // Get user data from Farcaster API
+              const response = await fetch(`https://api.farcaster.xyz/v2/user-by-address/${accounts[0]}`);
+              if (response.ok) {
+                const data = await response.json();
+                if (data.result && data.result.user) {
+                  const user = data.result.user;
+                  setUserData({
+                    fid: user.fid.toString(),
+                    username: user.username,
+                    displayName: user.display_name,
+                    avatar: user.pfp_url
+                  });
+                }
+              } else {
+                console.error('Failed to fetch user data:', await response.text());
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching user data:', error);
+        }
+      };
+      getUserData();
+    }
+  }, [isConnected, address]);
 
   const handleCheckIn = async () => {
     if (!isConnected) {
@@ -82,9 +147,25 @@ const DailyCheckIn = () => {
   return (
     <Container>
       <h1>Daily Check-In</h1>
-      <Status>
-        <p>{isConnected ? 'Connected to wallet' : 'Not connected to wallet'}</p>
-      </Status>
+      {isConnected && userData.fid ? (
+        <UserProfile>
+          {userData.avatar && (
+            <UserAvatar src={userData.avatar} alt="User avatar" />
+          )}
+          <UserInfo>
+            <div>FID: {userData.fid}</div>
+            <div>Username: {userData.username}</div>
+            {userData.displayName && (
+              <div>Display Name: {userData.displayName}</div>
+            )}
+            <div>Address: {address}</div>
+          </UserInfo>
+        </UserProfile>
+      ) : (
+        <Status>
+          <p>{isConnected ? 'Connected to wallet' : 'Not connected to wallet'}</p>
+        </Status>
+      )}
       <Button 
         onClick={handleCheckIn} 
         disabled={isCheckedIn}

@@ -26,6 +26,19 @@ const pulse = keyframes`
   }
 `;
 
+const pointsIncrease = keyframes`
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+    color: #00ff00;
+  }
+  100% {
+    transform: scale(1);
+  }
+`;
+
 const Container = styled.div`
   max-width: 600px;
   margin: 0 auto;
@@ -139,21 +152,41 @@ const UserInfo = styled.div`
   }
 `;
 
-const PointsDisplay = styled.div`
+interface PointsDisplayProps {
+  $isIncreasing: boolean;
+}
+
+const PointsDisplay = styled.div<PointsDisplayProps>`
   font-size: 14px;
   color: #1a1b1f;
-  margin: 15px 0;
-  padding: 10px;
+  margin: 15px auto;
+  padding: 15px;
   background-color: rgba(33, 150, 243, 0.1);
   border-radius: 4px;
   border: 2px solid rgba(33, 150, 243, 0.3);
   animation: ${fadeIn} 0.5s ease-out;
   font-family: 'Press Start 2P', cursive;
+  max-width: 200px;
+  text-align: center;
+
+  .points-label {
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
 
   .points-value {
-    font-size: 20px;
+    font-size: 24px;
     color: #2196f3;
     margin-top: 5px;
+    animation: ${({ $isIncreasing }) => $isIncreasing ? pointsIncrease : 'none'} 0.5s ease-out;
+  }
+
+  .points-increase {
+    color: #00ff00;
+    font-size: 12px;
+    margin-top: 5px;
+    opacity: ${({ $isIncreasing }) => $isIncreasing ? 1 : 0};
+    transition: opacity 0.3s ease;
   }
 `;
 
@@ -169,6 +202,7 @@ const DailyCheckIn = () => {
     avatar?: string;
   }>({});
   const [points, setPoints] = useState<number>(0);
+  const [isPointsIncreasing, setIsPointsIncreasing] = useState(false);
 
   useEffect(() => {
     const initializeFrame = async () => {
@@ -233,7 +267,8 @@ const DailyCheckIn = () => {
       setIsCheckedIn(true);
       setCheckInTime(now);
       
-      // Add points for daily check-in
+      // Add points with animation
+      setIsPointsIncreasing(true);
       const newPoints = points + 10;
       setPoints(newPoints);
       
@@ -241,6 +276,11 @@ const DailyCheckIn = () => {
       if (userFid) {
         localStorage.setItem(`points_${userFid}`, newPoints.toString());
       }
+      
+      // Reset animation after 500ms
+      setTimeout(() => {
+        setIsPointsIncreasing(false);
+      }, 500);
       
       console.log('Check-in successful', {
         fid: userFid,
@@ -256,6 +296,15 @@ const DailyCheckIn = () => {
   return (
     <Container>
       <Title>Daily Check-In</Title>
+      
+      <PointsDisplay $isIncreasing={isPointsIncreasing}>
+        <div className="points-label">TOTAL POINTS</div>
+        <div className="points-value">{points}</div>
+        {isPointsIncreasing && (
+          <div className="points-increase">+10</div>
+        )}
+      </PointsDisplay>
+
       {userFid && userData && (
         <UserProfile>
           {userData.avatar && (
@@ -270,12 +319,9 @@ const DailyCheckIn = () => {
               <div>{userData.displayName}</div>
             )}
           </UserInfo>
-          <PointsDisplay>
-            <div>Your Points</div>
-            <div className="points-value">{points}</div>
-          </PointsDisplay>
         </UserProfile>
       )}
+
       <Status>
         <p>
           {userFid 
@@ -286,12 +332,14 @@ const DailyCheckIn = () => {
           }
         </p>
       </Status>
+
       <Button 
         onClick={handleCheckIn} 
         disabled={isCheckedIn}
       >
         {isCheckedIn ? 'Already Checked In Today' : 'Check In (+10 points)'}
       </Button>
+
       {checkInTime && (
         <Status>
           <p>Last check-in: {new Date(checkInTime).toLocaleString()}</p>

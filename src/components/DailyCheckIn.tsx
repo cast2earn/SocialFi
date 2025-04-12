@@ -198,53 +198,57 @@ const DailyCheckIn = () => {
 
   useEffect(() => {
     const initializeFrame = async () => {
+      console.log('Starting frame initialization...');
       try {
         setIsLoading(true);
         setError(null);
         
         // Initialize Farcaster Frame SDK
+        console.log('Calling sdk.actions.ready()...');
         await sdk.actions.ready();
-        console.log('Frame SDK initialized');
+        console.log('Frame SDK initialized successfully');
         
-        const provider = sdk.wallet.ethProvider;
-        if (provider) {
-          const accounts = await provider.request({ method: 'eth_accounts' });
-          if (accounts && accounts[0]) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const fid = urlParams.get('fid');
-            const username = urlParams.get('username');
-            const displayName = urlParams.get('displayName');
-            const pfp = urlParams.get('pfp');
-            
-            console.log('URL Parameters:', { fid, username, displayName, pfp });
-            
-            if (fid) {
-              setUserFid(fid);
-              setUserData({
-                username: username || undefined,
-                displayName: displayName || undefined,
-                avatar: pfp || undefined
-              });
+        // Get URL parameters first
+        const urlParams = new URLSearchParams(window.location.search);
+        const fid = urlParams.get('fid');
+        const username = urlParams.get('username');
+        const displayName = urlParams.get('displayName');
+        const pfp = urlParams.get('pfp');
+        
+        console.log('URL Parameters:', { fid, username, displayName, pfp });
+        
+        if (fid) {
+          console.log('Setting user data with FID:', fid);
+          setUserFid(fid);
+          setUserData({
+            username: username || undefined,
+            displayName: displayName || undefined,
+            avatar: pfp || undefined
+          });
 
-              // Fetch user points from database
-              await fetchUserPoints(fid);
+          // Fetch user points from database
+          console.log('Fetching user points...');
+          await fetchUserPoints(fid);
 
-              // Save/update user profile
-              if (username) {
-                await saveUserProfile(fid, {
-                  username,
-                  display_name: displayName || undefined,
-                  avatar_url: pfp || undefined
-                });
-              }
-            }
+          // Save/update user profile
+          if (username) {
+            console.log('Saving user profile...');
+            await saveUserProfile(fid, {
+              username,
+              display_name: displayName || undefined,
+              avatar_url: pfp || undefined
+            });
           }
+        } else {
+          console.log('No FID found in URL parameters');
+          setError('No FID found in URL parameters');
         }
       } catch (error) {
         console.error('Error initializing frame:', error);
         setError('Failed to initialize frame');
       } finally {
         setIsLoading(false);
+        console.log('Frame initialization completed');
       }
     };
 
@@ -289,6 +293,7 @@ const DailyCheckIn = () => {
   };
 
   if (isLoading) {
+    console.log('Rendering loading state...');
     return (
       <Container>
         <Title>Loading...</Title>
@@ -297,6 +302,7 @@ const DailyCheckIn = () => {
   }
 
   if (error) {
+    console.log('Rendering error state:', error);
     return (
       <Container>
         <Title>Error</Title>
@@ -309,6 +315,14 @@ const DailyCheckIn = () => {
       </Container>
     );
   }
+
+  console.log('Rendering main component with data:', {
+    userFid,
+    userData,
+    points,
+    isCheckedIn,
+    checkInTime
+  });
 
   return (
     <Container>

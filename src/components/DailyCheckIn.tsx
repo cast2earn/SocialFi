@@ -31,15 +31,15 @@ const Container = styled.div`
   margin: 0 auto;
   padding: 20px;
   text-align: center;
-  background-color: #1a1b1f;
-  color: white;
+  background-color: #e3f2fd;
+  color: #1a1b1f;
   min-height: 100vh;
   animation: ${fadeIn} 0.5s ease-out;
   line-height: 1.6;
 `;
 
 const Button = styled.button`
-  background-color: #4CAF50;
+  background-color: #2196f3;
   color: white;
   padding: 12px 24px;
   border: none;
@@ -51,21 +51,21 @@ const Button = styled.button`
   font-family: 'Press Start 2P', cursive;
   animation: ${pulse} 2s infinite;
   text-transform: uppercase;
-  box-shadow: 0 4px 0 #45a049;
+  box-shadow: 0 4px 0 #1976d2;
 
   &:hover {
-    background-color: #45a049;
+    background-color: #1976d2;
     transform: translateY(-2px);
-    box-shadow: 0 6px 0 #388E3C;
+    box-shadow: 0 6px 0 #1565c0;
   }
 
   &:active {
     transform: translateY(2px);
-    box-shadow: 0 2px 0 #388E3C;
+    box-shadow: 0 2px 0 #1565c0;
   }
 
   &:disabled {
-    background-color: #cccccc;
+    background-color: #bbdefb;
     cursor: not-allowed;
     transform: none;
     animation: none;
@@ -77,20 +77,20 @@ const Status = styled.div`
   margin: 20px 0;
   padding: 15px;
   border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  background-color: rgba(33, 150, 243, 0.1);
+  color: #1a1b1f;
   font-size: 10px;
   animation: ${fadeIn} 0.5s ease-out;
   backdrop-filter: blur(5px);
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(33, 150, 243, 0.3);
   line-height: 1.8;
 `;
 
 const Title = styled.h1`
   font-size: 24px;
   margin-bottom: 30px;
-  color: white;
-  text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+  color: #1a1b1f;
+  text-shadow: 0 0 10px rgba(33, 150, 243, 0.5);
   animation: ${fadeIn} 0.5s ease-out;
   letter-spacing: 2px;
   line-height: 1.4;
@@ -104,12 +104,12 @@ const UserProfile = styled.div`
   margin: 20px 0;
   padding: 15px;
   border-radius: 4px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: rgba(33, 150, 243, 0.1);
   display: flex;
   flex-direction: column;
   align-items: center;
   animation: ${fadeIn} 0.5s ease-out;
-  border: 2px solid rgba(76, 175, 80, 0.3);
+  border: 2px solid rgba(33, 150, 243, 0.3);
   backdrop-filter: blur(5px);
 `;
 
@@ -119,23 +119,41 @@ const UserAvatar = styled.img`
   border-radius: 4px;
   margin-bottom: 10px;
   object-fit: cover;
-  border: 2px solid #4CAF50;
+  border: 2px solid #2196f3;
   image-rendering: pixelated;
 `;
 
 const UserInfo = styled.div`
   margin-top: 10px;
   font-size: 10px;
-  color: white;
+  color: #1a1b1f;
   text-align: center;
   font-family: 'Press Start 2P', cursive;
   
   div {
     margin: 8px 0;
     padding: 4px 8px;
-    background-color: rgba(76, 175, 80, 0.1);
+    background-color: rgba(33, 150, 243, 0.1);
     border-radius: 4px;
     display: inline-block;
+  }
+`;
+
+const PointsDisplay = styled.div`
+  font-size: 14px;
+  color: #1a1b1f;
+  margin: 15px 0;
+  padding: 10px;
+  background-color: rgba(33, 150, 243, 0.1);
+  border-radius: 4px;
+  border: 2px solid rgba(33, 150, 243, 0.3);
+  animation: ${fadeIn} 0.5s ease-out;
+  font-family: 'Press Start 2P', cursive;
+
+  .points-value {
+    font-size: 20px;
+    color: #2196f3;
+    margin-top: 5px;
   }
 `;
 
@@ -150,19 +168,17 @@ const DailyCheckIn = () => {
     displayName?: string;
     avatar?: string;
   }>({});
+  const [points, setPoints] = useState<number>(0);
 
   useEffect(() => {
     const initializeFrame = async () => {
       try {
-        // Initialize Frame
         await sdk.actions.ready();
         
-        // Get user data from frame context
         const provider = sdk.wallet.ethProvider;
         if (provider) {
           const accounts = await provider.request({ method: 'eth_accounts' });
           if (accounts && accounts[0]) {
-            // Get frame data from URL parameters
             const urlParams = new URLSearchParams(window.location.search);
             const fid = urlParams.get('fid');
             const username = urlParams.get('username');
@@ -176,6 +192,13 @@ const DailyCheckIn = () => {
                 displayName: displayName || undefined,
                 avatar: pfp || undefined
               });
+              
+              // Load saved points from localStorage
+              const savedPoints = localStorage.getItem(`points_${fid}`);
+              if (savedPoints) {
+                setPoints(parseInt(savedPoints));
+              }
+              
               console.log('Frame data:', { fid, username, displayName, pfp });
             }
           }
@@ -187,7 +210,6 @@ const DailyCheckIn = () => {
 
     initializeFrame();
 
-    // Check if user has already checked in today
     const lastCheckIn = localStorage.getItem('lastCheckIn');
     if (lastCheckIn) {
       const lastCheckInDate = new Date(lastCheckIn);
@@ -211,11 +233,20 @@ const DailyCheckIn = () => {
       setIsCheckedIn(true);
       setCheckInTime(now);
       
-      // Log the check-in with user data
+      // Add points for daily check-in
+      const newPoints = points + 10;
+      setPoints(newPoints);
+      
+      // Save points to localStorage
+      if (userFid) {
+        localStorage.setItem(`points_${userFid}`, newPoints.toString());
+      }
+      
       console.log('Check-in successful', {
         fid: userFid,
         username: userData.username,
-        timestamp: now
+        timestamp: now,
+        points: newPoints
       });
     } catch (error) {
       console.error('Check-in failed:', error);
@@ -239,6 +270,10 @@ const DailyCheckIn = () => {
               <div>{userData.displayName}</div>
             )}
           </UserInfo>
+          <PointsDisplay>
+            <div>Your Points</div>
+            <div className="points-value">{points}</div>
+          </PointsDisplay>
         </UserProfile>
       )}
       <Status>
@@ -255,7 +290,7 @@ const DailyCheckIn = () => {
         onClick={handleCheckIn} 
         disabled={isCheckedIn}
       >
-        {isCheckedIn ? 'Already Checked In Today' : 'Check In'}
+        {isCheckedIn ? 'Already Checked In Today' : 'Check In (+10 points)'}
       </Button>
       {checkInTime && (
         <Status>

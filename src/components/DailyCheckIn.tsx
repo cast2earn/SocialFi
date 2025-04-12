@@ -19,6 +19,9 @@ const Container = styled.div`
   background: #000000;
   color: #ffffff;
   animation: ${fadeIn} 0.5s ease-in;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 `;
 
 const Title = styled.h1`
@@ -126,6 +129,7 @@ const DailyCheckIn = () => {
   const [isPointsIncreasing, setIsPointsIncreasing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFrameLoaded, setIsFrameLoaded] = useState(false);
 
   // Fungsi untuk mengambil data point dari database
   const fetchUserPoints = async (fid: string) => {
@@ -206,6 +210,7 @@ const DailyCheckIn = () => {
         // Initialize Farcaster Frame SDK
         console.log('Calling sdk.actions.ready()...');
         await sdk.actions.ready();
+        setIsFrameLoaded(true);
         console.log('Frame SDK initialized successfully');
         
         // Get URL parameters first
@@ -253,6 +258,11 @@ const DailyCheckIn = () => {
     };
 
     initializeFrame();
+
+    // Cleanup function
+    return () => {
+      setIsFrameLoaded(false);
+    };
   }, []);
 
   const handleCheckIn = async () => {
@@ -292,6 +302,15 @@ const DailyCheckIn = () => {
     }
   };
 
+  if (!isFrameLoaded) {
+    console.log('Frame not loaded yet...');
+    return (
+      <Container>
+        <Title>Loading Frame...</Title>
+      </Container>
+    );
+  }
+
   if (isLoading) {
     console.log('Rendering loading state...');
     return (
@@ -321,7 +340,8 @@ const DailyCheckIn = () => {
     userData,
     points,
     isCheckedIn,
-    checkInTime
+    checkInTime,
+    isFrameLoaded
   });
 
   return (
